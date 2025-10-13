@@ -254,7 +254,7 @@ function render(){
   const act = activeByOverlap(pieceAbs);
   coils.forEach((c,i)=> c.el.classList.toggle('active', act.includes(i)));
 
-  stats.textContent = `t=${t.toFixed(3)}s • piece_angel=${pieceAbs.toFixed(1)}° • rpm=${rpm.toFixed(1)}]`;
+  stats.textContent = `t=${t.toFixed(3)}s • piece_angel=${pieceAbs.toFixed(1)}° • rpm=${rpm.toFixed(1)} ]`;
 }
 
 
