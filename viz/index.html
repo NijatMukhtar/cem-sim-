@@ -3,27 +3,31 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>CEM — Coil Ring UI (orbit piece, sabit x/y)</title>
+<title>CEM — Coil Ring UI (stabil parça + doğru hizalı bobinler)</title>
 <style>
   :root{
+    /* Boyutlar */
     --ring: 560px;
-    --trackInset: 72px;
-    --radius: calc(var(--ring)/2 - var(--trackInset));     /* bobin yolu yarıçapı */
+    --trackInset: 72px;                              /* bobin yolunun dış kenardan içe mesafesi */
+    --radius: calc(var(--ring)/2 - var(--trackInset)); /* bobinlerin gerçek yarıçapı */
 
     --coil-w: 56px; --coil-h: 28px;
 
     --disc: 310px;                 /* orta disk çapı */
-    --pieceW: 44px;                /* dönen parça boyutları */
+    --pieceW: 44px;                /* dönen parçanın boyutları */
     --pieceH: 22px;
-    --pieceOffset: 12px;           /* parçanın diske göre uzaklığı (dışta) */
+    --pieceOffset: 12px;           /* parça-disk arası (daha dışa = büyüt) */
 
-    --bg:#0a0b10; --panel:#0e1219; --border:#1a2130; --text:#e9eef6; --muted:#9aa6b2; --glow:#57ff9a;
+    /* Renkler */
+    --bg:#0a0b10; --panel:#0e1219; --border:#1a2130;
+    --text:#e9eef6; --muted:#9aa6b2; --glow:#57ff9a;
     --pieceColor:#dfe6f2;          /* tek renk parça */
   }
   *{box-sizing:border-box}
   html,body{height:100%}
   body{
-    margin:0; background: radial-gradient(1100px 800px at 20% -10%, #111420, var(--bg) 60%);
+    margin:0;
+    background: radial-gradient(1100px 800px at 20% -10%, #111420, var(--bg) 60%);
     color:var(--text); font:14px/1.5 Inter,system-ui,-apple-system,Segoe UI,Arial;
     display:grid; place-items:center; padding:20px;
   }
@@ -55,11 +59,17 @@
   }
   .axle{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:16px; height:16px; border-radius:50%; background:#2a333f; box-shadow: inset 0 0 0 3px #111820; }
 
-  /* Dönen tek parça — transform-origin yok, x/y ile yerleştirilecek */
+  /* === DÖNEN PARÇA: ANCHOR + PARÇA (stabil orbit) === */
+  .piece-anchor{
+    position:absolute; left:50%; top:50%;
+    width:0; height:0;
+    transform: translate(-50%,-50%) rotate(0deg); /* JS döndürecek */
+    will-change: transform;
+  }
   .rotor-piece{
     position:absolute; left:0; top:0;
     width:var(--pieceW); height:var(--pieceH);
-    transform: translate(-50%,-50%) rotate(var(--rot,0deg));
+    transform: translateX(var(--rPiece, 160px)) translate(-50%,-50%); /* sabit yarıçap */
     background: var(--pieceColor);
     border-radius: 6px;
     box-shadow: 0 4px 14px #0008, 0 0 0 1px #bfc8d4 inset;
@@ -102,7 +112,10 @@
     <div class="hub"></div>
     <div class="axle"></div>
 
-    <div class="rotor-piece" id="piece"></div> <!-- dönen küçük parça -->
+    <!-- STABİL DÖNEN PARÇA -->
+    <div class="piece-anchor" id="pieceAnchor">
+      <div class="rotor-piece" id="piece"></div>
+    </div>
   </div>
 
   <div class="panel">
@@ -145,7 +158,7 @@
     </div>
 
     <div class="stats" id="stats">t=0.000s • açı=0.0° • rpm=300 • aktif=[]</div>
-    <div class="hint">Tek renkli küçük parça beyaz diskin biraz üstünde, diskin çevresinde döner; pencereye denk gelince bobin yeşil parlar.</div>
+    <div class="hint">Tek renkli küçük parça beyaz diskin biraz üstünde, stabil olarak diskin çevresinde döner; pencereye denk gelince bobin yeşil parlar.</div>
   </div>
 </div>
 
@@ -157,7 +170,9 @@ const clamp = (x,a,b)=> Math.max(a, Math.min(b, x));
 const angDistCCW = (from,to)=> { let d = wrap360(to-from); if(d<0) d+=360; return d; };
 
 /* ==== DOM ==== */
-const arena = $("arena"), disc=$("disc"), piece=$("piece"), stats=$("stats");
+const arena = $("arena"), disc=$("disc"), stats=$("stats");
+const pieceAnchor = $("pieceAnchor"), piece = $("piece");
+
 const inpN=$("inpN"), inpMode=$("inpMode"), inpDir=$("inpDir"),
       inpRPM=$("inpRPM"), inpStep=$("inpStep"), inpDwell=$("inpDwell"),
       inpAngles=$("inpAngles");
@@ -219,23 +234,18 @@ function activeForAngle(a){
   return [...on].sort((x,y)=>x-y);
 }
 
-/* parçayı x/y ile yerleştir (disk çevresinde sabit yarıçap) */
-function placePiece(angleDeg){
-  const {cx,cy}=ringCenter();
-  const rPiece = cssNum(document.documentElement,'--disc')/2 +
-                 cssNum(document.documentElement,'--pieceOffset');
-  const rad = (angleDeg - 90) * Math.PI/180;   // 0° tepe
-  piece.style.left = (cx + rPiece*Math.cos(rad)) + "px";
-  piece.style.top  = (cy + rPiece*Math.sin(rad)) + "px";
-  // istersen sabit kalsın: aşağıyı kapat; teğet istiyorsan açık kalsın
-  piece.style.setProperty('--rot', angleDeg + 'deg');
-}
-
 /* çizim */
 function render(){
   const act=activeForAngle(ang);
   coils.forEach((c,i)=> c.el.classList.toggle('active', act.includes(i)));
-  placePiece(ang);                                       // <<< kritik: x/y ile yerleştir
+
+  /* --- Parça: stabil orbit (anchor döner, parça sabit yarıçapta) --- */
+  const rPiece = cssNum(document.documentElement,'--disc')/2 +
+                 cssNum(document.documentElement,'--pieceOffset');
+  piece.style.setProperty('--rPiece', rPiece + 'px');                      // yarıçap
+  pieceAnchor.style.transform = `translate(-50%,-50%) rotate(${ang}deg)`;  // sadece anchor döner
+  /* ------------------------------------------------------------------ */
+
   disc.style.transform = `translate(-50%,-50%) rotate(${-(ang*0.4)}deg)`;
   stats.textContent = `t=${t.toFixed(3)}s • açı=${wrap360(ang).toFixed(1)}° • rpm=${rpm.toFixed(1)} • aktif=[${act.join(",")}]`;
 }
@@ -258,7 +268,7 @@ btn6x60.onclick = ()=>{ inpN.value=6;  inpAngles.value="0,60,120,180,240,300"; r
 btn8x45.onclick = ()=>{ inpN.value=8;  inpAngles.value="0,45,90,135,180,225,270,315"; readUI(); render(); };
 btn12x30.onclick= ()=>{ inpN.value=12; inpAngles.value=Array.from({length:12},(_,i)=>i*30).join(","); readUI(); render(); };
 
-window.addEventListener('resize', ()=>{ placeCoils(); placePiece(ang); });
+window.addEventListener('resize', ()=>{ placeCoils(); /* anchor merkezde kaldığı için yeterli */ });
 
 /* init */
 buildCoils(); readUI(); render();
