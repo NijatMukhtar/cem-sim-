@@ -194,4 +194,85 @@ function buildCoils(){
   for(let i=0;i<N;i++){
     const el=document.createElement('div'); el.className='coil';
     const b=document.createElement('div'); b.className='body';
-    const l=document.createElement
+    const l=document.createElement('div'); l.className='capL';
+    const r=document.createElement('div'); r.className='capR';
+    el.append(b,l,r); arena.appendChild(el); coils.push({el});
+  }
+  placeCoils();
+}
+function placeCoils(){
+  const r = trackRadius(); const {cx,cy}=ringCenter();
+  coils.forEach((c,i)=>{
+    const deg=(360/N)*i, rad=(deg-90)*Math.PI/180;
+    c.el.style.left = (cx + r*Math.cos(rad))+"px";
+    c.el.style.top  = (cy + r*Math.sin(rad))+"px";
+    c.el.style.setProperty('--rot', deg+'deg');
+  });
+}
+
+/* Read UI */
+function readUI(){
+  N = clamp(parseInt(inpN.value||"4"),1,64);
+  mode = parseInt(inpMode.value||"2");
+  dir  = parseInt(inpDir.value||"1");
+  rpm  = parseFloat(inpRPM.value||"300");
+  stepMs = parseFloat(inpStep.value||"40");
+  dwell  = parseFloat(inpDwell.value||"60");
+
+  const arr=(inpAngles.value||"").split(",").map(s=>parseFloat(s.trim())).filter(v=>!Number.isNaN(v)).map(wrap360);
+  if(arr.length===N) angles=arr; else { angles=[...Array(N)].map((_,i)=>i*(360/N)); inpAngles.value=angles.join(","); }
+
+  if(coils.length!==N) buildCoils();
+  placeCoils();
+}
+
+/* Active coils */
+function activeForAngle(a){
+  const on=new Set();
+  for(let i=0;i<N;i++){
+    const aOn=wrap360(angles[i]), aOff=wrap360(aOn+dwell);
+    const span=angDistCCW(aOn,aOff), dOn=angDistCCW(aOn,wrap360(a));
+    if(dOn>=0 && dOn<span){ on.add(i); if(mode===2) on.add((i+1)%N); }
+  }
+  return [...on].sort((x,y)=>x-y);
+}
+
+/* Render */
+function render(){
+  const act=activeForAngle(ang);
+  coils.forEach((c,i)=> c.el.classList.toggle('active', act.includes(i)));
+  // rotor bloğunu döndür: translate(-50%,-50%) rotate(ang) translateY(-markerR)
+  const markerR = cssNum(document.documentElement,'--markerR');
+  marker.style.transform = `translate(-50%,-50%) rotate(${ang}deg) translateY(${-markerR}px)`;
+  // diske hafif ters yönlü parallax
+  disc.style.transform = `translate(-50%,-50%) rotate(${-(ang*0.4)}deg)`;
+  stats.textContent = `t=${t.toFixed(3)}s • açı=${wrap360(ang).toFixed(1)}° • rpm=${rpm.toFixed(1)} • aktif=[${act.join(",")}]`;
+}
+
+/* Loop */
+function loop(now){
+  if(!last) last=now;
+  let dt=(now-last)/1000, step=stepMs/1000;
+  while(dt>=step){ t+=step; ang=wrap360(ang + 360*(rpm/60)*step*dir); dt-=step; }
+  last=now - dt*1000;
+  render();
+  raf=requestAnimationFrame(loop);
+}
+
+/* Buttons */
+btnStart.onclick=()=>{ readUI(); if(!raf){ last=0; raf=requestAnimationFrame(loop);} };
+btnStop.onclick =()=>{ if(raf){ cancelAnimationFrame(raf); raf=null; } };
+btnReset.onclick=()=>{ if(raf){ cancelAnimationFrame(raf); raf=null; } t=0; ang=0; render(); };
+
+btn4x90.onclick = ()=>{ inpN.value=4;  inpAngles.value="0,90,180,270"; readUI(); render(); };
+btn6x60.onclick = ()=>{ inpN.value=6;  inpAngles.value="0,60,120,180,240,300"; readUI(); render(); };
+btn8x45.onclick = ()=>{ inpN.value=8;  inpAngles.value="0,45,90,135,180,225,270,315"; readUI(); render(); };
+btn12x30.onclick= ()=>{ inpN.value=12; inpAngles.value=Array.from({length:12},(_,i)=>i*30).join(","); readUI(); render(); };
+
+window.addEventListener('resize', placeCoils);
+
+/* Init */
+buildCoils(); readUI(); render();
+</script>
+</body>
+</html>
