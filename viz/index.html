@@ -3,26 +3,26 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>CEM — Diskle Birlikte Dönen Parça (final)</title>
+<title>CEM — DEMO </title>
 <style>
   :root{
-    /* Boyutlar */
+    
     --ring: 560px;
-    --trackInset: 72px;                                  /* bobin yolunun dıştan içe mesafesi */
-    --radius: calc(var(--ring)/2 - var(--trackInset));   /* bobinlerin gerçek yarıçapı */
+    --trackInset: 72px;                                  
+    --radius: calc(var(--ring)/2 - var(--trackInset));   
 
     --coil-w: 56px; --coil-h: 28px;
 
-    --disc: 310px;                 /* orta disk çapı */
-    --pieceW: 44px;                /* dönen parçanın boyutları */
+    --disc: 310px;                 
+    --pieceW: 44px;                
     --pieceH: 22px;
-    --pieceOffset: 12px;           /* parça–disk mesafesi (dışa doğru) */
-    --pieceAngle: 300deg;          /* parça, diske göre sabit açı (0° = tepe/yukarı) */
+    --pieceOffset: 12px;           
+    --pieceAngle: 300deg;          
 
-    /* Renkler */
+  
     --bg:#0a0b10; --panel:#0e1219; --border:#1a2130;
     --text:#e9eef6; --muted:#9aa6b2; --glow:#57ff9a;
-    --pieceColor:#dfe6f2;          /* tek renk parça */
+    --pieceColor:#dfe6f2;         
   }
   *{box-sizing:border-box}
   html,body{height:100%}
@@ -35,7 +35,7 @@
   .stage{ width:min(1140px,96vw); display:grid; grid-template-columns: 1fr 340px; gap:28px; align-items:center; }
   @media (max-width:1020px){ .stage{grid-template-columns:1fr} }
 
-  /* Görsel alan */
+ 
   .arena{
     position:relative; width:var(--ring); height:var(--ring); margin:auto; border-radius:50%;
     background: radial-gradient(circle at 50% 50%, #0e1219 40%, #0c1119 41%), conic-gradient(#0f1521, #0f1724 40%, #101826);
@@ -45,10 +45,10 @@
   .ring-track{ position:absolute; inset:var(--trackInset); border-radius:50%; border:10px solid #8bd0ff26; box-shadow:0 0 0 1px #ffffff10 inset; }
   .ring-dash{ position:absolute; inset:0; border-radius:50%; border:1px dashed #233042; opacity:.4 }
 
-  /* — Disk ve bağlanmış parça için sargı — */
+  
   .disc-wrap{
     position:absolute; left:50%; top:50%;
-    transform: translate(-50%,-50%) rotate(0deg); /* JS döndürecek; 0°=tepe için JS’te -90 düzeltmesi var */
+    transform: translate(-50%,-50%) rotate(0deg); 
     will-change: transform;
   }
   .disc{
@@ -64,7 +64,7 @@
   }
   .axle{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:16px; height:16px; border-radius:50%; background:#2a333f; box-shadow: inset 0 0 0 3px #111820; }
 
-  /* — Diske bağlı dönen parça — */
+  
   .rotor-piece{
     position:absolute; left:50%; top:50%;
     width:var(--pieceW); height:var(--pieceH);
@@ -76,7 +76,7 @@
     box-shadow: 0 4px 14px #0008, 0 0 0 1px #bfc8d4 inset;
   }
 
-  /* Bobinler (trig ile tam yol üzerinde) */
+  
   .coil{
     position:absolute; left:0; top:0; width:var(--coil-w); height:var(--coil-h);
     border-radius:8px; overflow:hidden; transform: translate(-50%,-50%) rotate(var(--rot));
@@ -89,7 +89,7 @@
   .coil.active{ box-shadow: 0 3px 12px #0008, 0 0 30px var(--glow); filter:brightness(1) }
   .coil.active::after{ content:""; position:absolute; right:-12px; top:50%; width:12px; height:12px; margin-top:-6px; border-radius:50%; background:var(--glow); box-shadow:0 0 16px var(--glow); }
 
-  /* Panel */
+  
   .panel{ background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:14px; box-shadow:0 12px 36px #0007; }
   .panel h3{margin:4px 0 8px; font-size:15px}
   .row{display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin:8px 0}
@@ -109,7 +109,7 @@
     <div class="ring-track"></div>
     <div class="ring-dash"></div>
 
-    <!-- Disk + parça aynı sargıda; diski döndürünce parça da döner -->
+    
     <div class="disc-wrap" id="discWrap">
       <div class="rotor-piece" id="piece"></div>
       <div class="disc"></div>
@@ -119,23 +119,23 @@
   </div>
 
   <div class="panel">
-    <h3>Çalıştır</h3>
+    <h3>RUN</h3>
     <div class="row">
-      <button id="btnStart">Başlat</button>
-      <button id="btnStop" class="secondary">Durdur</button>
-      <button id="btnReset" class="secondary">Sıfırla</button>
+      <button id="btnStart">START</button>
+      <button id="btnStop" class="secondary">STOP</button>
+      <button id="btnReset" class="secondary">RESET</button>
     </div>
 
-    <h3>Parametreler</h3>
+    <h3>Parameters</h3>
     <div class="row">
-      <label>EM sayısı (N) <input type="number" id="inpN" min="1" max="64" value="4"></label>
-      <label>Mod
+      <label>Number of EMs (N) <input type="number" id="inpN" min="1" max="64" value="4"></label>
+      <label>Mode
         <select id="inpMode">
-          <option value="1">Tekli</option>
-          <option value="2" selected>İkili</option>
+          <option value="1">Single</option>
+          <option value="2" selected>Paired (neighbor)</option>
         </select>
       </label>
-      <label>Yön
+      <label>Direction
         <select id="inpDir">
           <option value="1" selected>CW (+)</option>
           <option value="-1">CCW (−)</option>
@@ -143,12 +143,12 @@
       </label>
     </div>
     <div class="row">
-      <label>Hız (RPM) <input type="number" id="inpRPM" value="300"></label>
-      <label>Adım (ms) <input type="number" id="inpStep" value="40"></label>
+      <label>Speed (RPM) <input type="number" id="inpRPM" value="300"></label>
+      <label>Step (ms) <input type="number" id="inpStep" value="40"></label>
       <label>Overlap (°) <input type="number" id="inpOverlap" value="20"></label>
-      <label>Faz ofseti (°) <input type="number" id="inpPhase" value="0"></label>
+      <label>Phase offset (°) <input type="number" id="inpPhase" value="0"></label>
     </div>
-    <label>Başlangıç açıları (°, virgülle)
+    <label>Start angles (°, comma-separated)
       <input type="text" id="inpAngles" value="0,90,180,270">
     </label>
     <div class="row" style="margin-top:6px">
@@ -158,19 +158,18 @@
       <button class="secondary" id="btn12x30">12×30°</button>
     </div>
 
-    <div class="stats" id="stats">t=0.000s • disk_açı=0.0° • parça_açı=0.0° • rpm=300 • aktif=[]</div>
+    <div class="stats" id="stats">t=0.000s • disk_angle=0.0° • piece_angle=0.0° • rpm=300 • active=[]</div>
     <div class="hint">Disk döner → parça diskle birlikte döner. Parçanın MUTLAK açısına en yakın bobin (±overlap/2) yanar. Faz ofseti ile ince ayar yapabilirsin.</div>
   </div>
 </div>
 
 <script>
-/* ==== yardımcılar ==== */
 const $ = id => document.getElementById(id);
 const wrap360 = a => (a%360 + 360) % 360;
 const clamp = (x,a,b)=> Math.max(a, Math.min(b, x));
 const angDiff = (a,b)=> { let d = Math.abs(wrap360(a) - wrap360(b)); return d>180 ? 360-d : d; };
 
-/* ==== DOM ==== */
+
 const arena = $("arena"), discWrap=$("discWrap"), stats=$("stats");
 const inpN=$("inpN"), inpMode=$("inpMode"), inpDir=$("inpDir"),
       inpRPM=$("inpRPM"), inpStep=$("inpStep"), inpOverlap=$("inpOverlap"), inpPhase=$("inpPhase"),
@@ -178,17 +177,17 @@ const inpN=$("inpN"), inpMode=$("inpMode"), inpDir=$("inpDir"),
 const btnStart=$("btnStart"), btnStop=$("btnStop"), btnReset=$("btnReset");
 const btn4x90=$("btn4x90"), btn6x60=$("btn6x60"), btn8x45=$("btn8x45"), btn12x30=$("btn12x30");
 
-/* ==== durum ==== */
-let N=4, mode=2, dir=1, rpm=300, stepMs=40, overlapDeg=20, phaseDeg=0;
-let angles=[0,90,180,270];  // Bobin açılarının GERÇEK konumu (0° tepe)
-let t=0, ang=0, raf=null, last=0; // ang: diskin mutlak açısı (0° tepe kabul)
 
-/* CSS sayısal okuma */
+let N=4, mode=2, dir=1, rpm=300, stepMs=40, overlapDeg=20, phaseDeg=0;
+let angles=[0,90,180,270];  
+let t=0, ang=0, raf=null, last=0; 
+
+
 function cssNum(el, name){ return parseFloat(getComputedStyle(el).getPropertyValue(name)); }
 function trackRadius(){ const ring = cssNum(document.documentElement,'--ring'); const inset=cssNum(document.documentElement,'--trackInset'); return ring/2 - inset; }
 function ringCenter(){ return { cx: arena.clientWidth/2, cy: arena.clientHeight/2 }; }
 
-/* Bobinler */
+
 let coils=[];
 function buildCoils(){
   coils.forEach(c=>c.el.remove()); coils=[];
@@ -204,8 +203,8 @@ function buildCoils(){
 function placeCoils(){
   const r=trackRadius(); const {cx,cy}=ringCenter();
   for(let i=0;i<N;i++){
-    const deg=wrap360(angles[i]);               // görsel = mantık
-    const rad=(deg-90)*Math.PI/180;             // 0° tepe
+    const deg=wrap360(angles[i]);               
+    const rad=(deg-90)*Math.PI/180;             
     const el=coils[i].el;
     el.style.left=(cx + r*Math.cos(rad))+"px";
     el.style.top =(cy + r*Math.sin(rad))+"px";
@@ -213,7 +212,7 @@ function placeCoils(){
   }
 }
 
-/* UI */
+
 function readUI(){
   N=clamp(parseInt(inpN.value||"4"),1,64);
   mode=parseInt(inpMode.value||"2"); dir=parseInt(inpDir.value||"1");
@@ -228,7 +227,7 @@ function readUI(){
   placeCoils();
 }
 
-/* aktif bobin: parçanın MUTLAK açısına en yakın olan (±overlap/2) */
+
 function activeByOverlap(pieceAbsAngle){
   const on=new Set();
   for(let i=0;i<N;i++){
@@ -241,23 +240,23 @@ function activeByOverlap(pieceAbsAngle){
   return [...on].sort((a,b)=>a-b);
 }
 
-/* çizim */
+
 function render(){
-  /* Disk + parçayı döndür: CSS’te 0° sağ olduğundan -90° düzeltmesi yap */
+ 
   discWrap.style.transform = `translate(-50%,-50%) rotate(${ang - 90}deg)`;
 
-  /* Parçanın mutlak açısı = diskin açısı + parça sabit açısı (CSS 0°=sağ olduğu için -90°) + kullanıcı faz düzeltmesi */
+  
   const pieceAngleDeg = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--pieceAngle')) || 0;
   const pieceAbs = wrap360(ang + (pieceAngleDeg - 90) + phaseDeg);
 
-  /* Aktif bobinleri güncelle */
+
   const act = activeByOverlap(pieceAbs);
   coils.forEach((c,i)=> c.el.classList.toggle('active', act.includes(i)));
 
   stats.textContent = `t=${t.toFixed(3)}s • disk_açı=${wrap360(ang).toFixed(1)}° • parça_açı=${pieceAbs.toFixed(1)}° • rpm=${rpm.toFixed(1)} • aktif=[${act.join(",")}]`;
 }
 
-/* döngü */
+
 function loop(now){
   if(!last) last=now;
   let dt=(now-last)/1000, step=stepMs/1000;
@@ -265,7 +264,7 @@ function loop(now){
   last=now - dt*1000; render(); raf=requestAnimationFrame(loop);
 }
 
-/* butonlar */
+
 btnStart.onclick=()=>{ readUI(); if(!raf){ last=0; raf=requestAnimationFrame(loop);} };
 btnStop.onclick =()=>{ if(raf){ cancelAnimationFrame(raf); raf=null; } };
 btnReset.onclick=()=>{ if(raf){ cancelAnimationFrame(raf); raf=null; } t=0; ang=0; render(); };
@@ -277,7 +276,7 @@ btn12x30.onclick= ()=>{ inpN.value=12; inpAngles.value=Array.from({length:12},(_
 
 window.addEventListener('resize', ()=>{ placeCoils(); });
 
-/* init */
+
 buildCoils(); readUI(); render();
 </script>
 </body>
