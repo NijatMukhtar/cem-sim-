@@ -3,23 +3,22 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>CEM — Coil Ring UI (tek parça dönen)</title>
+<title>CEM — Coil Ring UI (orbit piece, sabit x/y)</title>
 <style>
   :root{
     --ring: 560px;
     --trackInset: 72px;
-    --radius: calc(var(--ring)/2 - var(--trackInset)); /* bobin yolu yarıçapı */
+    --radius: calc(var(--ring)/2 - var(--trackInset));     /* bobin yolu yarıçapı */
 
     --coil-w: 56px; --coil-h: 28px;
 
     --disc: 310px;                 /* orta disk çapı */
-    --pieceW: 44px;                /* dönen parçanın boyutları */
+    --pieceW: 44px;                /* dönen parça boyutları */
     --pieceH: 22px;
-    --pieceOffset: 12px;           /* parçanın diske göre yüksekliği (diske ne kadar yakın) */
-    --pieceR: calc(var(--disc)/2 + var(--pieceOffset)); /* parçanın döndüğü yarıçap */
+    --pieceOffset: 12px;           /* parçanın diske göre uzaklığı (dışta) */
 
     --bg:#0a0b10; --panel:#0e1219; --border:#1a2130; --text:#e9eef6; --muted:#9aa6b2; --glow:#57ff9a;
-    --pieceColor:#dfe6f2;          /* TEK RENK (istersen değiştir) */
+    --pieceColor:#dfe6f2;          /* tek renk parça */
   }
   *{box-sizing:border-box}
   html,body{height:100%}
@@ -48,16 +47,19 @@
     background: radial-gradient(circle at 35% 30%, #eef3fa 0%, #dde3ee 35%, #c6cfdb 65%, #b0bac8 100%);
     box-shadow: inset 8px -10px 18px #9aa3b1b0, inset -10px 12px 24px #ffffffaa, 0 16px 46px #0009;
   }
-  .hub{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:74px; height:74px; border-radius:50%;
-        background: radial-gradient(circle at 35% 35%, #808a98, #566171 60%, #465160); box-shadow: inset 0 0 0 6px #cdd3dc55, 0 8px 16px #0009; }
+  .hub{
+    position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+    width:74px; height:74px; border-radius:50%;
+    background: radial-gradient(circle at 35% 35%, #808a98, #566171 60%, #465160);
+    box-shadow: inset 0 0 0 6px #cdd3dc55, 0 8px 16px #0009;
+  }
   .axle{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:16px; height:16px; border-radius:50%; background:#2a333f; box-shadow: inset 0 0 0 3px #111820; }
 
-  /* DÖNEN PARÇA — tek renk, diskin biraz üstünde */
+  /* Dönen tek parça — transform-origin yok, x/y ile yerleştirilecek */
   .rotor-piece{
-    position:absolute; left:50%; top:50%;
+    position:absolute; left:0; top:0;
     width:var(--pieceW); height:var(--pieceH);
-    transform-origin:50% calc(var(--pieceR) + var(--pieceH)/2);
-    transform: translate(-50%,-50%) rotate(0deg) translateY(calc(-1 * var(--pieceR)));
+    transform: translate(-50%,-50%) rotate(var(--rot,0deg));
     background: var(--pieceColor);
     border-radius: 6px;
     box-shadow: 0 4px 14px #0008, 0 0 0 1px #bfc8d4 inset;
@@ -143,16 +145,18 @@
     </div>
 
     <div class="stats" id="stats">t=0.000s • açı=0.0° • rpm=300 • aktif=[]</div>
-    <div class="hint">Tek renkli küçük parça beyaz diskin biraz üstünde döner; bobin penceresine girdiğinde bobin yeşil parlar.</div>
+    <div class="hint">Tek renkli küçük parça beyaz diskin biraz üstünde, diskin çevresinde döner; pencereye denk gelince bobin yeşil parlar.</div>
   </div>
 </div>
 
 <script>
+/* ==== yardımcılar ==== */
 const $ = id => document.getElementById(id);
 const wrap360 = a => (a%360 + 360) % 360;
 const clamp = (x,a,b)=> Math.max(a, Math.min(b, x));
 const angDistCCW = (from,to)=> { let d = wrap360(to-from); if(d<0) d+=360; return d; };
 
+/* ==== DOM ==== */
 const arena = $("arena"), disc=$("disc"), piece=$("piece"), stats=$("stats");
 const inpN=$("inpN"), inpMode=$("inpMode"), inpDir=$("inpDir"),
       inpRPM=$("inpRPM"), inpStep=$("inpStep"), inpDwell=$("inpDwell"),
@@ -160,15 +164,18 @@ const inpN=$("inpN"), inpMode=$("inpMode"), inpDir=$("inpDir"),
 const btnStart=$("btnStart"), btnStop=$("btnStop"), btnReset=$("btnReset");
 const btn4x90=$("btn4x90"), btn6x60=$("btn6x60"), btn8x45=$("btn8x45"), btn12x30=$("btn12x30");
 
+/* ==== durum ==== */
 let N=4, mode=2, dir=1, rpm=300, stepMs=40, dwell=60;
 let angles=[0,90,180,270];
 let t=0, ang=0, raf=null, last=0;
 let coils=[];
 
+/* CSS sayısal okuma */
 function cssNum(el, name){ return parseFloat(getComputedStyle(el).getPropertyValue(name)); }
 function trackRadius(){ const ring = cssNum(document.documentElement,'--ring'); const inset=cssNum(document.documentElement,'--trackInset'); return ring/2 - inset; }
 function ringCenter(){ return { cx: arena.clientWidth/2, cy: arena.clientHeight/2 }; }
 
+/* Bobinler */
 function buildCoils(){
   coils.forEach(c=>c.el.remove()); coils=[];
   for(let i=0;i<N;i++){
@@ -190,6 +197,7 @@ function placeCoils(){
   });
 }
 
+/* UI oku */
 function readUI(){
   N=clamp(parseInt(inpN.value||"4"),1,64);
   mode=parseInt(inpMode.value||"2"); dir=parseInt(inpDir.value||"1");
@@ -200,6 +208,7 @@ function readUI(){
   if(coils.length!==N) buildCoils(); placeCoils();
 }
 
+/* aktif bobinler */
 function activeForAngle(a){
   const on=new Set();
   for(let i=0;i<N;i++){
@@ -210,21 +219,28 @@ function activeForAngle(a){
   return [...on].sort((x,y)=>x-y);
 }
 
+/* parçayı x/y ile yerleştir (disk çevresinde sabit yarıçap) */
+function placePiece(angleDeg){
+  const {cx,cy}=ringCenter();
+  const rPiece = cssNum(document.documentElement,'--disc')/2 +
+                 cssNum(document.documentElement,'--pieceOffset');
+  const rad = (angleDeg - 90) * Math.PI/180;   // 0° tepe
+  piece.style.left = (cx + rPiece*Math.cos(rad)) + "px";
+  piece.style.top  = (cy + rPiece*Math.sin(rad)) + "px";
+  // istersen sabit kalsın: aşağıyı kapat; teğet istiyorsan açık kalsın
+  piece.style.setProperty('--rot', angleDeg + 'deg');
+}
+
+/* çizim */
 function render(){
   const act=activeForAngle(ang);
   coils.forEach((c,i)=> c.el.classList.toggle('active', act.includes(i)));
-
-  /* küçük parçayı döndür: diskin biraz üstünde */
- const rPiece =
-  cssNum(document.documentElement,'--disc')/2
-  + cssNum(document.documentElement,'--pieceOffset');
-
-  piece.style.transform = `translate(-50%,-50%) rotate(${ang}deg) translateY(${-rPiece}px)`;
-
-  disc.style.transform = `translate(-50%,-50%) rotate(${-(ang*0.4)}deg)`; // parallax
+  placePiece(ang);                                       // <<< kritik: x/y ile yerleştir
+  disc.style.transform = `translate(-50%,-50%) rotate(${-(ang*0.4)}deg)`;
   stats.textContent = `t=${t.toFixed(3)}s • açı=${wrap360(ang).toFixed(1)}° • rpm=${rpm.toFixed(1)} • aktif=[${act.join(",")}]`;
 }
 
+/* döngü */
 function loop(now){
   if(!last) last=now;
   let dt=(now-last)/1000, step=stepMs/1000;
@@ -232,6 +248,7 @@ function loop(now){
   last=now - dt*1000; render(); raf=requestAnimationFrame(loop);
 }
 
+/* butonlar */
 btnStart.onclick=()=>{ readUI(); if(!raf){ last=0; raf=requestAnimationFrame(loop);} };
 btnStop.onclick =()=>{ if(raf){ cancelAnimationFrame(raf); raf=null; } };
 btnReset.onclick=()=>{ if(raf){ cancelAnimationFrame(raf); raf=null; } t=0; ang=0; render(); };
@@ -241,7 +258,7 @@ btn6x60.onclick = ()=>{ inpN.value=6;  inpAngles.value="0,60,120,180,240,300"; r
 btn8x45.onclick = ()=>{ inpN.value=8;  inpAngles.value="0,45,90,135,180,225,270,315"; readUI(); render(); };
 btn12x30.onclick= ()=>{ inpN.value=12; inpAngles.value=Array.from({length:12},(_,i)=>i*30).join(","); readUI(); render(); };
 
-window.addEventListener('resize', placeCoils);
+window.addEventListener('resize', ()=>{ placeCoils(); placePiece(ang); });
 
 /* init */
 buildCoils(); readUI(); render();
