@@ -215,7 +215,10 @@ function render(){
   coils.forEach((c,i)=> c.el.classList.toggle('active', act.includes(i)));
 
   /* küçük parçayı döndür: diskin biraz üstünde */
-  const rPiece = cssNum(document.documentElement,'--pieceR');
+ const rPiece =
+  cssNum(document.documentElement,'--disc')/2
+  + cssNum(document.documentElement,'--pieceOffset');
+
   piece.style.transform = `translate(-50%,-50%) rotate(${ang}deg) translateY(${-rPiece}px)`;
 
   disc.style.transform = `translate(-50%,-50%) rotate(${-(ang*0.4)}deg)`; // parallax
