@@ -92,4 +92,106 @@
   button:disabled{opacity:.6; cursor:not-allowed}
   input[type="number"]{width:92px}
   input[type="text"]{width:100%}
-  .stats{font:12px/1.6 ui-monospace,
+  .stats{font:12px/1.6 ui-monospace,Menlo,Consolas; color:#cfe2ff; background:#09101a; border:1px solid #162033; border-radius:8px; padding:8px; margin-top:8px}
+  .hint{font-size:12px;color:var(--muted);margin-top:6px}
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <!-- Görsel alan -->
+  <div class="arena" id="arena">
+    <div class="ring-outer"></div>
+    <div class="ring-track"></div>
+    <div class="ring-dash"></div>
+
+    <div class="disc" id="disc"></div>
+    <div class="hub"></div>
+    <div class="axle"></div>
+
+    <div class="rotor-marker" id="marker"></div>
+    <!-- Coils JS ile eklenecek -->
+  </div>
+
+  <!-- Kontrol paneli -->
+  <div class="panel">
+    <h3>Çalıştır</h3>
+    <div class="row">
+      <button id="btnStart">Başlat</button>
+      <button id="btnStop" class="secondary">Durdur</button>
+      <button id="btnReset" class="secondary">Sıfırla</button>
+    </div>
+
+    <h3>Parametreler</h3>
+    <div class="row">
+      <label>EM sayısı (N) <input type="number" id="inpN" min="1" max="64" value="4"></label>
+      <label>Mod
+        <select id="inpMode">
+          <option value="1">Tekli</option>
+          <option value="2" selected>İkili</option>
+        </select>
+      </label>
+      <label>Yön
+        <select id="inpDir">
+          <option value="1" selected>CW (+)</option>
+          <option value="-1">CCW (−)</option>
+        </select>
+      </label>
+    </div>
+    <div class="row">
+      <label>Hız (RPM) <input type="number" id="inpRPM" value="300"></label>
+      <label>Adım (ms) <input type="number" id="inpStep" value="40"></label>
+      <label>Dwell (°) <input type="number" id="inpDwell" value="60"></label>
+    </div>
+    <label>Başlangıç açıları (°, virgülle)
+      <input type="text" id="inpAngles" value="0,90,180,270">
+    </label>
+    <div class="row" style="margin-top:6px">
+      <button class="secondary" id="btn4x90">4×90°</button>
+      <button class="secondary" id="btn6x60">6×60°</button>
+      <button class="secondary" id="btn8x45">8×45°</button>
+      <button class="secondary" id="btn12x30">12×30°</button>
+    </div>
+
+    <div class="stats" id="stats">t=0.000s • açı=0.0° • rpm=300 • aktif=[]</div>
+    <div class="hint">İpucu: Parametreleri değiştir → <b>Başlat</b>. Yeşil parlayan bobin(ler) aktiftir; gri blok rotor üzerindeki işarettir.</div>
+  </div>
+</div>
+
+<script>
+/* ===== Helpers ===== */
+const $ = id => document.getElementById(id);
+const wrap360 = a => (a%360 + 360) % 360;
+const clamp = (x,a,b)=> Math.max(a, Math.min(b, x));
+const angDistCCW = (from,to)=> { let d = wrap360(to-from); if(d<0) d+=360; return d; };
+
+/* ===== DOM ===== */
+const arena = $("arena"), disc=$("disc"), marker=$("marker"), stats=$("stats");
+const inpN=$("inpN"), inpMode=$("inpMode"), inpDir=$("inpDir"),
+      inpRPM=$("inpRPM"), inpStep=$("inpStep"), inpDwell=$("inpDwell"),
+      inpAngles=$("inpAngles");
+const btnStart=$("btnStart"), btnStop=$("btnStop"), btnReset=$("btnReset");
+const btn4x90=$("btn4x90"), btn6x60=$("btn6x60"), btn8x45=$("btn8x45"), btn12x30=$("btn12x30");
+
+/* ===== State ===== */
+let N=4, mode=2, dir=1, rpm=300, stepMs=40, dwell=60;
+let angles=[0,90,180,270];
+let t=0, ang=0, raf=null, last=0;
+let coils=[];
+
+/* CSS var okuyucu */
+function cssNum(el, name){ return parseFloat(getComputedStyle(el).getPropertyValue(name)); }
+function trackRadius(){
+  const ring = cssNum(document.documentElement, '--ring');
+  const inset= cssNum(document.documentElement, '--trackInset');
+  return ring/2 - inset;
+}
+function ringCenter(){ return { cx: arena.clientWidth/2, cy: arena.clientHeight/2 }; }
+
+/* Coils build + place (trig) */
+function buildCoils(){
+  coils.forEach(c=>c.el.remove()); coils=[];
+  for(let i=0;i<N;i++){
+    const el=document.createElement('div'); el.className='coil';
+    const b=document.createElement('div'); b.className='body';
+    const l=document.createElement
