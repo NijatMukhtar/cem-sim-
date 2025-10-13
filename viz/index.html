@@ -9,7 +9,8 @@
     --ring: 520px;          /* dış halka çapı */
     --coil-w: 56px;         /* bobin genişliği */
     --coil-h: 28px;         /* bobin yüksekliği */
-    --radius: 200px;        /* bobinlerin yarıçapı (merkezden uzaklık) */
+    --trackInset: 60px;
+    --radius: calc(var(--ring)/2 - var(--trackInset));
     --disc: 280px;          /* rotor diski çapı */
     --bg: #0a0b0f;
     --line: #19202a;
@@ -46,7 +47,12 @@
     border: 10px solid #e9eef61c;
     box-shadow: 0 0 0 1px #ffffff08 inset;
   }
-  .ring-outline2{ inset:60px; border-color:#9ad7ff22 }
+  .ring-outline2{ 
+     inset: var(--trackInset);
+  border: 10px solid #9ad7ff22;
+  border-radius:50%;
+  box-shadow: 0 0 0 1px #ffffff08 inset;
+}
   /* ince kılavuz çizgi */
   .guide{ position:absolute; inset:0; border-radius:50%; border:1px dashed #293142; }
 
