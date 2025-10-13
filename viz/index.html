@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>CEM — Diskle Birlikte Dönen Parça</title>
+<title>CEM — Diskle Birlikte Dönen Parça (final)</title>
 <style>
   :root{
     /* Boyutlar */
@@ -45,10 +45,10 @@
   .ring-track{ position:absolute; inset:var(--trackInset); border-radius:50%; border:10px solid #8bd0ff26; box-shadow:0 0 0 1px #ffffff10 inset; }
   .ring-dash{ position:absolute; inset:0; border-radius:50%; border:1px dashed #233042; opacity:.4 }
 
-  /* — Disk ve bağlanmış parça için bir kapsayıcı — */
+  /* — Disk ve bağlanmış parça için sargı — */
   .disc-wrap{
     position:absolute; left:50%; top:50%;
-    transform: translate(-50%,-50%) rotate(0deg); /* JS döndürecek; 0° = tepe hizası için -90 düzeltmesi JS’te */
+    transform: translate(-50%,-50%) rotate(0deg); /* JS döndürecek; 0°=tepe için JS’te -90 düzeltmesi var */
     will-change: transform;
   }
   .disc{
@@ -146,6 +146,7 @@
       <label>Hız (RPM) <input type="number" id="inpRPM" value="300"></label>
       <label>Adım (ms) <input type="number" id="inpStep" value="40"></label>
       <label>Overlap (°) <input type="number" id="inpOverlap" value="20"></label>
+      <label>Faz ofseti (°) <input type="number" id="inpPhase" value="0"></label>
     </div>
     <label>Başlangıç açıları (°, virgülle)
       <input type="text" id="inpAngles" value="0,90,180,270">
@@ -157,8 +158,8 @@
       <button class="secondary" id="btn12x30">12×30°</button>
     </div>
 
-    <div class="stats" id="stats">t=0.000s • açı=0.0° • rpm=300 • aktif=[]</div>
-    <div class="hint">Parça diske bağlıdır; disk döndükçe parça da döner. Parçanın mutlak açısına en yakın bobin (±overlap/2) yanar.</div>
+    <div class="stats" id="stats">t=0.000s • disk_açı=0.0° • parça_açı=0.0° • rpm=300 • aktif=[]</div>
+    <div class="hint">Disk döner → parça diskle birlikte döner. Parçanın MUTLAK açısına en yakın bobin (±overlap/2) yanar. Faz ofseti ile ince ayar yapabilirsin.</div>
   </div>
 </div>
 
@@ -172,13 +173,13 @@ const angDiff = (a,b)=> { let d = Math.abs(wrap360(a) - wrap360(b)); return d>18
 /* ==== DOM ==== */
 const arena = $("arena"), discWrap=$("discWrap"), stats=$("stats");
 const inpN=$("inpN"), inpMode=$("inpMode"), inpDir=$("inpDir"),
-      inpRPM=$("inpRPM"), inpStep=$("inpStep"), inpOverlap=$("inpOverlap"),
+      inpRPM=$("inpRPM"), inpStep=$("inpStep"), inpOverlap=$("inpOverlap"), inpPhase=$("inpPhase"),
       inpAngles=$("inpAngles");
 const btnStart=$("btnStart"), btnStop=$("btnStop"), btnReset=$("btnReset");
 const btn4x90=$("btn4x90"), btn6x60=$("btn6x60"), btn8x45=$("btn8x45"), btn12x30=$("btn12x30");
 
 /* ==== durum ==== */
-let N=4, mode=2, dir=1, rpm=300, stepMs=40, overlapDeg=20;
+let N=4, mode=2, dir=1, rpm=300, stepMs=40, overlapDeg=20, phaseDeg=0;
 let angles=[0,90,180,270];  // Bobin açılarının GERÇEK konumu (0° tepe)
 let t=0, ang=0, raf=null, last=0; // ang: diskin mutlak açısı (0° tepe kabul)
 
@@ -218,6 +219,7 @@ function readUI(){
   mode=parseInt(inpMode.value||"2"); dir=parseInt(inpDir.value||"1");
   rpm=parseFloat(inpRPM.value||"300"); stepMs=parseFloat(inpStep.value||"40");
   overlapDeg=parseFloat(inpOverlap.value||"20");
+  phaseDeg  =parseFloat(inpPhase.value  ||"0");
 
   const arr=(inpAngles.value||"").split(",").map(s=>parseFloat(s.trim())).filter(v=>!Number.isNaN(v)).map(wrap360);
   if(arr.length===N) angles=arr; else { angles=[...Array(N)].map((_,i)=> i*(360/N)); inpAngles.value=angles.join(","); }
@@ -244,9 +246,9 @@ function render(){
   /* Disk + parçayı döndür: CSS’te 0° sağ olduğundan -90° düzeltmesi yap */
   discWrap.style.transform = `translate(-50%,-50%) rotate(${ang - 90}deg)`;
 
-  /* Parçanın mutlak açısı = diskin açısı + parça sabit açısı */
+  /* Parçanın mutlak açısı = diskin açısı + parça sabit açısı (CSS 0°=sağ olduğu için -90°) + kullanıcı faz düzeltmesi */
   const pieceAngleDeg = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--pieceAngle')) || 0;
-  const pieceAbs = wrap360(ang + pieceAngleDeg);
+  const pieceAbs = wrap360(ang + (pieceAngleDeg - 90) + phaseDeg);
 
   /* Aktif bobinleri güncelle */
   const act = activeByOverlap(pieceAbs);
