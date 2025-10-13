@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="tr">
+<meta charset="utf-8" />
+<title>CEM Görsel Demo</title>
+<style>
+  body{font-family:system-ui,Arial;margin:24px}
+  .ring{position:relative;width:320px;height:320px;border:1px dashed #999;border-radius:50%}
+  .em{position:absolute;width:26px;height:26px;border-radius:50%;background:#ddd;left:147px;top:147px;
+      transform-origin:13px 113px; transition:transform 80ms, background 80ms}
+  .em.on{background:#4caf50; transform:scale(1.15) rotate(var(--rot)) translateY(-113px)}
+  .em.off{background:#ddd; transform:rotate(var(--rot)) translateY(-113px)}
+  #panel{margin-top:12px}
+</style>
+<div class="ring" id="ring"></div>
+<div id="panel">
+  <button id="play">Oynat</button>
+  <span id="angle">0°</span>
+</div>
+<script src="app.js"></script>
+</html>
