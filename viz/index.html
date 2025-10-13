@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>CEM Görsel Sim — v2 (tek dosya, şık)</title>
+<title>CEM Görsel Sim — v2.1</title>
 <style>
   :root{
-    --size: 420px;     /* halka boyu */
-    --radius: 160px;   /* nokta yarıçapı */
-    --dot: 22px;       /* nokta çapı */
-    --bg1:#0e0f13; --bg2:#12141a; --fg:#e7e7ea; --muted:#9aa0a6;
-    --pri:#5aa8ff; --ok:#38d679; --ring:#2a2f3a;
+    --size: 420px;      /* halka boyu */
+    --radius: 160px;    /* çember yarıçapı */
+    --dot: 22px;        /* nokta çapı */
+    --posR: var(--radius); /* yerleşim yarıçapı (çevre=radius, merkez=0) */
+    --fg:#e7e7ea; --muted:#9aa0a6; --ring:#2a2f3a;
   }
   *{box-sizing:border-box} html,body{height:100%}
   body{
@@ -18,21 +18,13 @@
     background: radial-gradient(1200px 800px at 20% 0%, #121722, #0a0c12 60%);
     display:grid; place-items:center; padding:24px;
   }
-  .card{
-    width:min(980px, 95vw);
-    background:linear-gradient(180deg,var(--bg2),#0c0f15);
-    border:1px solid #1a1f2b; border-radius:16px; box-shadow:0 20px 60px #0008;
-    padding:18px 18px 2px;
-  }
-  .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-  .title{font-size:18px;font-weight:700;letter-spacing:.2px}
+  .card{width:min(980px,95vw); background:#0d1118; border:1px solid #1a1f2b; border-radius:16px; box-shadow:0 20px 60px #0008; padding:18px}
   .wrap{display:grid; grid-template-columns: 1fr 320px; gap:22px; align-items:center}
   @media (max-width:900px){ .wrap{grid-template-columns:1fr} }
 
   /* RING */
   .ring{
-    position:relative; width:var(--size); height:var(--size);
-    margin:auto; border-radius:50%;
+    position:relative; width:var(--size); height:var(--size); margin:auto; border-radius:50%;
     background:
       radial-gradient(circle at 50% 50%, #0d1118 40%, #0c1016 41%),
       conic-gradient(#19202c, #0f1520);
@@ -41,8 +33,7 @@
   }
   .center-dot{
     position:absolute; left:50%; top:50%;
-    width:10px; height:10px; margin:-5px 0 0 -5px;
-    background:#1f2733; border-radius:50%; box-shadow:0 0 0 2px #000 inset;
+    width:10px; height:10px; margin:-5px 0 0 -5px; background:#1f2733; border-radius:50%; box-shadow:0 0 0 2px #000 inset;
   }
   .needle{
     position:absolute; left:50%; top:50%;
@@ -50,15 +41,16 @@
     background:linear-gradient(#ffc400,#ff8c00);
     transform-origin:50% calc(100% - 14px);
     transform: translate(-50%,-50%) rotate(0deg);
-    border-radius:1px;
-    box-shadow:0 0 12px #ffbf00aa;
+    border-radius:1px; box-shadow:0 0 12px #ffbf00aa;
   }
 
-  /* Dots placed perfectly on circle */
+  /* DOTS — merkeze göre döndür + yarıçap boyunca taşı */
   .em{
     position:absolute; left:50%; top:50%;
     width:var(--dot); height:var(--dot); border-radius:50%;
-    transform: translate(-50%,-50%) rotate(var(--rot)) translate(0, calc(-1 * var(--radius)));
+    /* KRİTİK DÜZELTME: transform-origin ve sırayla rotate→translateY */
+    transform-origin: 50% calc(var(--posR) + var(--dot)/2);
+    transform: translate(-50%,-50%) rotate(var(--rot)) translateY(calc(-1 * var(--posR)));
     background:#cfd3da; filter:brightness(.65) saturate(.8);
     box-shadow:0 0 0 1px #0006 inset, 0 4px 10px #0006;
     transition: filter 120ms ease, box-shadow 120ms ease, transform 120ms ease;
@@ -68,38 +60,29 @@
     box-shadow:0 0 0 1px #0a2613 inset, 0 0 16px #35e07b, 0 4px 10px #0009;
   }
 
-  /* PANEL */
   .panel{border-left:1px solid #1a1f2b; padding-left:18px}
   .row{display:flex; gap:8px; flex-wrap:wrap; margin:10px 0}
-  button,select,input{
-    background:#0e121a; color:var(--fg); border:1px solid #1b2130;
-    border-radius:10px; padding:8px 12px; font:600 13px/1 Inter,system-ui,Arial;
-  }
+  button,select,input{background:#0e121a; color:var(--fg); border:1px solid #1b2130; border-radius:10px; padding:8px 12px; font:600 13px/1 Inter,system-ui,Arial;}
   button{background:linear-gradient(180deg,#2b72ff,#1f59d1); border-color:#2a65e0; cursor:pointer}
   button.secondary{background:#10141c; border-color:#1b2130}
-  button:disabled{opacity:.6;cursor:not-allowed}
-  input[type="number"]{width:88px}
-  input[type="text"]{width:100%}
+  input[type="number"]{width:88px} input[type="text"]{width:100%}
   .tiny{font:12px; color:var(--muted); margin-top:6px}
   .stats{font:12px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas; color:#b9c0c8; background:#0a0d12; border:1px solid #151b26; border-radius:8px; padding:8px}
 </style>
 </head>
 <body>
   <div class="card">
-    <div class="head">
-      <div class="title">CEM Görsel Sim — v2</div>
-      <div class="tiny">Rotor açısına göre EM aktivasyonu (tek dosya)</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div style="font-size:18px;font-weight:700">CEM Görsel Sim — v2.1</div>
+      <div class="tiny">Rotor açısı → EM aktivasyonu (tek dosya)</div>
     </div>
 
     <div class="wrap">
-      <!-- RING -->
       <div class="ring" id="ring">
         <div class="center-dot"></div>
         <div class="needle" id="needle"></div>
-        <!-- EM noktaları JS ile eklenecek -->
       </div>
 
-      <!-- PANEL -->
       <div class="panel">
         <div class="row">
           <button id="btnStart">Başlat</button>
@@ -107,9 +90,7 @@
           <button id="btnReset" class="secondary">Sıfırla</button>
         </div>
         <div class="row">
-          <label>EM sayısı (N)
-            <input type="number" id="inpN" min="1" max="64" value="6">
-          </label>
+          <label>EM sayısı (N) <input type="number" id="inpN" min="1" max="64" value="6"></label>
           <label>Mod
             <select id="inpMode">
               <option value="1">Tekli</option>
@@ -124,144 +105,38 @@
           </label>
         </div>
         <div class="row">
-          <label>Hız (RPM)
-            <input type="number" id="inpRPM" value="300">
-          </label>
-          <label>Adım (ms)
-            <input type="number" id="inpStep" value="40">
-          </label>
-          <label>Dwell (°)
-            <input type="number" id="inpDwell" value="40">
-          </label>
+          <label>Hız (RPM) <input type="number" id="inpRPM" value="300"></label>
+          <label>Adım (ms) <input type="number" id="inpStep" value="40"></label>
+          <label>Dwell (°) <input type="number" id="inpDwell" value="40"></label>
         </div>
         <label>Başlangıç açıları (°, virgülle)
           <input type="text" id="inpAngles" value="0,60,120,180,240,300">
         </label>
-
         <div class="row" style="margin-top:8px">
+          <label>Yerleşim
+            <select id="inpPlace">
+              <option value="edge" selected>Çevre</option>
+              <option value="center">Merkez</option>
+            </select>
+          </label>
           <button class="secondary" id="btn6x60">6×60°</button>
           <button class="secondary" id="btn8x45">8×45°</button>
           <button class="secondary" id="btn12x30">12×30°</button>
         </div>
 
         <div class="stats" id="stats">t=0.000s • açı=0.0° • rpm=300 • aktif=[]</div>
-        <div class="tiny">İpucu: Parametreleri değiştir → <b>Başlat</b>. İğne rotor açısını gösterir; yeşil noktalar aktif EM’lerdir.</div>
+        <div class="tiny">İpucu: Parametreleri değiştir → <b>Başlat</b>. “Yerleşim: Merkez” dersen tüm noktalar ortada toplanır.</div>
       </div>
     </div>
   </div>
 
 <script>
-/* === Kısa yardımcılar === */
+/* === yardımcılar === */
 const $ = id => document.getElementById(id);
 const clamp = (x,a,b)=> Math.max(a, Math.min(b, x));
 const wrap360 = a => (a%360 + 360) % 360;
 const angDistCCW = (from,to)=> { let d = wrap360(to-from); if(d<0) d+=360; return d; };
 
-/* === DOM referansları === */
-const ring = $("ring"), needle = $("needle"), stats = $("stats");
-const inpN=$("inpN"), inpMode=$("inpMode"), inpDir=$("inpDir"),
-      inpRPM=$("inpRPM"), inpStep=$("inpStep"), inpDwell=$("inpDwell"),
-      inpAngles=$("inpAngles");
-const btnStart=$("btnStart"), btnStop=$("btnStop"), btnReset=$("btnReset");
-const btn6x60=$("btn6x60"), btn8x45=$("btn8x45"), btn12x30=$("btn12x30");
-
-/* === Simülasyon durumu === */
-let N=6, mode=2, dir=1, rpm=300, stepMs=40, dwell=40;
-let angles=[0,60,120,180,240,300];
-let t=0, ang=0, raf=null;
-let nodes=[];
-
-/* === Halkayı çiz === */
-function drawNodes(){
-  nodes.forEach(n=>n.remove()); nodes=[];
-  for(let i=0;i<N;i++){
-    const d=document.createElement('div');
-    d.className='em'; d.style.setProperty('--rot', (360/N)*i + 'deg');
-    ring.appendChild(d); nodes.push(d);
-  }
-}
-drawNodes();
-
-/* === Parametreleri UI'dan oku === */
-function readUI(){
-  N = clamp(parseInt(inpN.value||"6"),1,64);
-  mode = parseInt(inpMode.value||"1");
-  dir = parseInt(inpDir.value||"1");
-  rpm = parseFloat(inpRPM.value||"300");
-  stepMs = parseFloat(inpStep.value||"40");
-  dwell = parseFloat(inpDwell.value||"40");
-
-  // açı listesi
-  const arr = (inpAngles.value||"").split(",").map(s=>parseFloat(s.trim())).filter(v=>!Number.isNaN(v)).map(wrap360);
-  if(arr.length===N){ angles = arr; }
-  else{ angles = [...Array(N)].map((_,i)=> i*(360/N)); inpAngles.value = angles.join(","); }
-  if(nodes.length !== N) drawNodes();
-}
-
-/* === Aktif EM'leri hesapla === */
-function activeForAngle(a){
-  const on = new Set();
-  for(let i=0;i<N;i++){
-    const aOn = wrap360(angles[i]);
-    const aOff= wrap360(aOn + dwell);
-    const span= angDistCCW(aOn, aOff);
-    const dOn = angDistCCW(aOn, wrap360(a));
-    if(dOn>=0 && dOn<span){
-      on.add(i);
-      if(mode===2) on.add((i+1)%N);
-    }
-  }
-  return [...on].sort((x,y)=>x-y);
-}
-
-/* === Çizim === */
-function render(){
-  const act = activeForAngle(ang);
-  nodes.forEach((n,i)=> n.classList.toggle('on', act.includes(i)));
-  needle.style.transform = `translate(-50%,-50%) rotate(${ang}deg)`;
-  stats.textContent = `t=${t.toFixed(3)}s • açı=${wrap360(ang).toFixed(1)}° • rpm=${rpm.toFixed(1)} • aktif=[${act.join(",")}]`;
-}
-
-/* === Döngü (requestAnimationFrame) === */
-let last=0;
-function loop(now){
-  if(!last) last = now;
-  const dt = (now - last) / 1000; // s
-  const simStep = stepMs/1000;
-  // Sim zamanı sabit adımlarla ilerlesin (güzel görünüm + deterministik)
-  let acc = dt;
-  while(acc >= simStep){
-    t += simStep;
-    ang = wrap360(ang + 360*(rpm/60)*simStep*dir);
-    acc -= simStep;
-  }
-  last = now - acc*1000;
-  render();
-  raf = requestAnimationFrame(loop);
-}
-
-/* === Butonlar === */
-btnStart.onclick = ()=>{
-  readUI();
-  if(raf) return;
-  last = 0;
-  raf = requestAnimationFrame(loop);
-};
-btnStop.onclick = ()=>{
-  if(raf){ cancelAnimationFrame(raf); raf=null; }
-};
-btnReset.onclick = ()=>{
-  if(raf){ cancelAnimationFrame(raf); raf=null; }
-  t=0; ang=0; render();
-};
-
-/* === Preset butonları === */
-btn6x60.onclick = ()=>{ inpN.value=6; inpAngles.value="0,60,120,180,240,300"; readUI(); render(); };
-btn8x45.onclick = ()=>{ inpN.value=8; inpAngles.value="0,45,90,135,180,225,270,315"; readUI(); render(); };
-btn12x30.onclick= ()=>{ inpN.value=12; inpAngles.value=Array.from({length:12},(_,i)=>i*30).join(","); readUI(); render(); };
-
-/* === İlk çizim === */
-readUI(); render();
-</script>
-</body>
-</html>
+/* === DOM === */
+const ring=$("ring"), needle=$("needle"), stats=$("stats");
+const inpN=$("inpN"), inpMode=$("
