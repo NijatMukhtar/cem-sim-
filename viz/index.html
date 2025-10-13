@@ -158,7 +158,7 @@
       <button class="secondary" id="btn12x30">12×30°</button>
     </div>
 
-    <div class="stats" id="stats">t=0.000s • piece_angle=0.0° • rpm=50 • active=[]</div>
+    <div class="stats" id="stats">t=0.000s • piece_angle=0.0° • rpm=50</div>
     <div class="hint">The system energizes the electromagnet aligned with the rotor’s absolute angle. <em>Overlap</em> defines the dwell range (±overlap/2) around this position, while <em>phase offset</em> corrects timing errors between sensor and drive signals. In <em>Paired</em> mode, adjacent coils are co-energized to broaden the magnetic field and reduce torque ripple.
 </div>
   </div>
@@ -254,7 +254,7 @@ function render(){
   const act = activeByOverlap(pieceAbs);
   coils.forEach((c,i)=> c.el.classList.toggle('active', act.includes(i)));
 
-  stats.textContent = `t=${t.toFixed(3)}s • piece_angel=${pieceAbs.toFixed(1)}° • rpm=${rpm.toFixed(1)} • active=[${act.join(",")}]`;
+  stats.textContent = `t=${t.toFixed(3)}s • piece_angel=${pieceAbs.toFixed(1)}° • rpm=${rpm.toFixed(1)}]`;
 }
 
 
