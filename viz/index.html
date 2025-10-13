@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>CEM — Coil Ring UI (rotor bloklu)</title>
+<title>CEM — Coil Ring UI (süpürücü kol, doğru hizalı)</title>
 <style>
   :root{
     /* Boyutlar */
@@ -11,18 +11,21 @@
     --trackInset: 72px;       /* bobin yolunun dış kenardan içe uzaklığı  */
     --radius: calc(var(--ring)/2 - var(--trackInset)); /* bobinlerin gerçek yarıçapı */
     --coil-w: 56px; --coil-h: 28px;
+
     --disc: 310px;            /* orta disk çapı */
-    --marker-w: 42px;         /* rotor bloğunun genişliği */
-    --marker-h: 20px;         /* rotor bloğunun yüksekliği */
-    --markerR: calc(var(--disc)/2 - 18px); /* bloğun diske göre yarıçapı */
+    --sweeper-w: 20px;        /* süpürücü kol kalınlığı */
+    --sweeper-L: 190px;       /* kol uzunluğu (dıştan içeri girsin, diski kessin) */
+    --sweeper-gap: 10px;      /* kolun yol (bobin) merkezinden dışa/ içe kaydırması */
 
     /* Renkler */
-    --bg: #0a0b10; --panel:#0e1219; --border:#1a2130; --text:#e9eef6; --muted:#9aa6b2; --glow:#57ff9a;
+    --bg: #0a0b10; --panel:#0e1219; --border:#1a2130;
+    --text:#e9eef6; --muted:#9aa6b2; --glow:#57ff9a;
   }
   *{box-sizing:border-box}
   html,body{height:100%}
   body{
-    margin:0; background: radial-gradient(1100px 800px at 20% -10%, #111420, var(--bg) 60%);
+    margin:0;
+    background: radial-gradient(1100px 800px at 20% -10%, #111420, var(--bg) 60%);
     color:var(--text); font:14px/1.5 Inter,system-ui,-apple-system,Segoe UI,Arial;
     display:grid; place-items:center; padding:20px;
   }
@@ -54,20 +57,23 @@
   }
   .axle{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:16px; height:16px; border-radius:50%; background:#2a333f; box-shadow: inset 0 0 0 3px #111820; }
 
-  /* Rotor üzerindeki dönen blok (iğne yerine) */
-  .rotor-marker{
+  /* ——— SÜPÜRÜCÜ KOL ———
+     Kol, bobin yolunun biraz DIŞINDAN dönüyor ve içe uzayıp diski kesiyor. */
+  .sweeper{
     position:absolute; left:50%; top:50%;
-    width:var(--marker-w); height:var(--marker-h); border-radius:10px;
-    transform-origin:50% calc(var(--markerR) + var(--marker-h)/2);
-    transform: translate(-50%,-50%) rotate(0deg) translateY(calc(-1 * var(--markerR)));
-    background: linear-gradient(180deg, #e6ecf5, #d7dfea);
-    box-shadow: 0 2px 10px #0008, inset 0 0 0 1px #b7c1ce;
+    width:var(--sweeper-w); height:var(--sweeper-L);
+    border-radius:12px;
+    transform-origin:50% calc(var(--radius) + var(--sweeper-gap) + var(--sweeper-L)/2);
+    transform: translate(-50%,-50%) rotate(0deg) translateY(calc(-1 * (var(--radius) + var(--sweeper-gap))));
+    background: linear-gradient(180deg, #eef3fa, #d7dfea);
+    box-shadow: 0 6px 24px #0008, inset 0 0 0 1px #b7c1ce;
   }
-  .rotor-marker::before, .rotor-marker::after{
-    content:""; position:absolute; top:0; width:12px; height:100%; background:#9aa7b6;
+  .sweeper::before, .sweeper::after{
+    content:""; position:absolute; left:0; width:100%; height:8px; background:#9aa7b6;
+    box-shadow: inset 0 0 0 1px #8b97a6;
   }
-  .rotor-marker::before{ left:0; box-shadow: inset -2px 0 3px #0003 }
-  .rotor-marker::after{ right:0; box-shadow: inset  2px 0 3px #0003 }
+  .sweeper::before{ top:10px; border-radius:10px }
+  .sweeper::after { bottom:10px; border-radius:10px }
 
   /* ——— BOBİNLER ——— (trig ile yerleşim) */
   .coil{
@@ -109,7 +115,7 @@
     <div class="hub"></div>
     <div class="axle"></div>
 
-    <div class="rotor-marker" id="marker"></div>
+    <div class="sweeper" id="sweeper"></div>
     <!-- Coils JS ile eklenecek -->
   </div>
 
@@ -154,7 +160,7 @@
     </div>
 
     <div class="stats" id="stats">t=0.000s • açı=0.0° • rpm=300 • aktif=[]</div>
-    <div class="hint">İpucu: Parametreleri değiştir → <b>Başlat</b>. Yeşil parlayan bobin(ler) aktiftir; gri blok rotor üzerindeki işarettir.</div>
+    <div class="hint">İpucu: Parametreleri değiştir → <b>Başlat</b>. Yeşil parlayan bobin(ler) aktiftir; gri blok rotor üstündeki süpürücü koldur.</div>
   </div>
 </div>
 
@@ -166,7 +172,7 @@ const clamp = (x,a,b)=> Math.max(a, Math.min(b, x));
 const angDistCCW = (from,to)=> { let d = wrap360(to-from); if(d<0) d+=360; return d; };
 
 /* ===== DOM ===== */
-const arena = $("arena"), disc=$("disc"), marker=$("marker"), stats=$("stats");
+const arena = $("arena"), disc=$("disc"), sweeper=$("sweeper"), stats=$("stats");
 const inpN=$("inpN"), inpMode=$("inpMode"), inpDir=$("inpDir"),
       inpRPM=$("inpRPM"), inpStep=$("inpStep"), inpDwell=$("inpDwell"),
       inpAngles=$("inpAngles");
@@ -226,7 +232,7 @@ function readUI(){
   placeCoils();
 }
 
-/* Active coils */
+/* Active coils (dwell + mod) */
 function activeForAngle(a){
   const on=new Set();
   for(let i=0;i<N;i++){
@@ -241,11 +247,15 @@ function activeForAngle(a){
 function render(){
   const act=activeForAngle(ang);
   coils.forEach((c,i)=> c.el.classList.toggle('active', act.includes(i)));
-  // rotor bloğunu döndür: translate(-50%,-50%) rotate(ang) translateY(-markerR)
-  const markerR = cssNum(document.documentElement,'--markerR');
-  marker.style.transform = `translate(-50%,-50%) rotate(${ang}deg) translateY(${-markerR}px)`;
-  // diske hafif ters yönlü parallax
+
+  /* Süpürücü kolu döndür: yol merkezinden biraz DIŞTA dursun (sweeper-gap) */
+  const r = trackRadius() + cssNum(document.documentElement,'--sweeper-gap');
+  sweeper.style.transform =
+    `translate(-50%,-50%) rotate(${ang}deg) translateY(${-r}px)`;
+
+  /* Disk hafif ters yönde (parallax) */
   disc.style.transform = `translate(-50%,-50%) rotate(${-(ang*0.4)}deg)`;
+
   stats.textContent = `t=${t.toFixed(3)}s • açı=${wrap360(ang).toFixed(1)}° • rpm=${rpm.toFixed(1)} • aktif=[${act.join(",")}]`;
 }
 
