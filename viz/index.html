@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>CEM — DEMO </title>
+<title>CEM — DEMO</title>
 <style>
   :root{
     
@@ -119,7 +119,7 @@
   </div>
 
   <div class="panel">
-    <h3>RUN</h3>
+    <h2>RUN</h2>
     <div class="row">
       <button id="btnStart">START</button>
       <button id="btnStop" class="secondary">STOP</button>
@@ -143,8 +143,8 @@
       </label>
     </div>
     <div class="row">
-      <label>Speed (RPM) <input type="number" id="inpRPM" value="300"></label>
-      <label>Step (ms) <input type="number" id="inpStep" value="40"></label>
+      <label>Speed (RPM) <input type="number" id="inpRPM" value="50"></label>
+      <label>Step (ms) <input type="number" id="inpStep" value="10"></label>
       <label>Overlap (°) <input type="number" id="inpOverlap" value="20"></label>
       <label>Phase offset (°) <input type="number" id="inpPhase" value="0"></label>
     </div>
@@ -159,7 +159,7 @@
     </div>
 
     <div class="stats" id="stats">t=0.000s • disk_angle=0.0° • piece_angle=0.0° • rpm=300 • active=[]</div>
-    <div class="hint">Note: Commutation energizes the electromagnet whose azimuth aligns with the piece’s absolute mechanical angle; **overlap** sets the electrical **dwell window** (±overlap/2) around that alignment. **Phase offset** compensates sensor/driver latency and the magnetic lead/lag between rotor flux and the stator pole. In **Paired** mode, the adjacent coil is co-energized to widen the resultant MMF and smooth torque ripple.
+    <div class="hint">Note: Commutation energizes the electromagnet whose azimuth aligns with the piece’s absolute mechanical angle; overlap sets the electrical dwell window (±overlap/2) around that alignment. Phase offset compensates sensor/driver latency and the magnetic lead/lag between rotor flux and the stator pole. In Paired mode, the adjacent coil is co-energized to widen the resultant MMF and smooth torque ripple.
 </div>
   </div>
 </div>
@@ -254,7 +254,7 @@ function render(){
   const act = activeByOverlap(pieceAbs);
   coils.forEach((c,i)=> c.el.classList.toggle('active', act.includes(i)));
 
-  stats.textContent = `t=${t.toFixed(3)}s • disk_açı=${wrap360(ang).toFixed(1)}° • parça_açı=${pieceAbs.toFixed(1)}° • rpm=${rpm.toFixed(1)} • aktif=[${act.join(",")}]`;
+  stats.textContent = `t=${t.toFixed(3)}s • disk_angel=${wrap360(ang).toFixed(1)}° • piece_angel=${pieceAbs.toFixed(1)}° • rpm=${rpm.toFixed(1)} • active=[${act.join(",")}]`;
 }
 
 
