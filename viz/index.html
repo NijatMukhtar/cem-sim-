@@ -3,36 +3,35 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>CEM — Coil Ring UI (süpürücü kol, doğru hizalı)</title>
+<title>CEM — Coil Ring UI (tek parça dönen)</title>
 <style>
   :root{
-    /* Boyutlar */
-    --ring: 560px;            /* dış halka çapı */
-    --trackInset: 72px;       /* bobin yolunun dış kenardan içe uzaklığı  */
-    --radius: calc(var(--ring)/2 - var(--trackInset)); /* bobinlerin gerçek yarıçapı */
+    --ring: 560px;
+    --trackInset: 72px;
+    --radius: calc(var(--ring)/2 - var(--trackInset)); /* bobin yolu yarıçapı */
+
     --coil-w: 56px; --coil-h: 28px;
 
-    --disc: 310px;            /* orta disk çapı */
-    --sweeper-w: 20px;        /* süpürücü kol kalınlığı */
-    --sweeper-L: 190px;       /* kol uzunluğu (dıştan içeri girsin, diski kessin) */
-    --sweeper-gap: 10px;      /* kolun yol (bobin) merkezinden dışa/ içe kaydırması */
+    --disc: 310px;                 /* orta disk çapı */
+    --pieceW: 44px;                /* dönen parçanın boyutları */
+    --pieceH: 22px;
+    --pieceOffset: 12px;           /* parçanın diske göre yüksekliği (diske ne kadar yakın) */
+    --pieceR: calc(var(--disc)/2 + var(--pieceOffset)); /* parçanın döndüğü yarıçap */
 
-    /* Renkler */
-    --bg: #0a0b10; --panel:#0e1219; --border:#1a2130;
-    --text:#e9eef6; --muted:#9aa6b2; --glow:#57ff9a;
+    --bg:#0a0b10; --panel:#0e1219; --border:#1a2130; --text:#e9eef6; --muted:#9aa6b2; --glow:#57ff9a;
+    --pieceColor:#dfe6f2;          /* TEK RENK (istersen değiştir) */
   }
   *{box-sizing:border-box}
   html,body{height:100%}
   body{
-    margin:0;
-    background: radial-gradient(1100px 800px at 20% -10%, #111420, var(--bg) 60%);
+    margin:0; background: radial-gradient(1100px 800px at 20% -10%, #111420, var(--bg) 60%);
     color:var(--text); font:14px/1.5 Inter,system-ui,-apple-system,Segoe UI,Arial;
     display:grid; place-items:center; padding:20px;
   }
   .stage{ width:min(1140px,96vw); display:grid; grid-template-columns: 1fr 340px; gap:28px; align-items:center; }
   @media (max-width:1020px){ .stage{grid-template-columns:1fr} }
 
-  /* ——— GÖRSEL ALAN ——— */
+  /* Görsel alan */
   .arena{
     position:relative; width:var(--ring); height:var(--ring); margin:auto; border-radius:50%;
     background: radial-gradient(circle at 50% 50%, #0e1219 40%, #0c1119 41%), conic-gradient(#0f1521, #0f1724 40%, #101826);
@@ -49,33 +48,22 @@
     background: radial-gradient(circle at 35% 30%, #eef3fa 0%, #dde3ee 35%, #c6cfdb 65%, #b0bac8 100%);
     box-shadow: inset 8px -10px 18px #9aa3b1b0, inset -10px 12px 24px #ffffffaa, 0 16px 46px #0009;
   }
-  .hub{
-    position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
-    width:74px; height:74px; border-radius:50%;
-    background: radial-gradient(circle at 35% 35%, #808a98, #566171 60%, #465160);
-    box-shadow: inset 0 0 0 6px #cdd3dc55, 0 8px 16px #0009;
-  }
+  .hub{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:74px; height:74px; border-radius:50%;
+        background: radial-gradient(circle at 35% 35%, #808a98, #566171 60%, #465160); box-shadow: inset 0 0 0 6px #cdd3dc55, 0 8px 16px #0009; }
   .axle{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:16px; height:16px; border-radius:50%; background:#2a333f; box-shadow: inset 0 0 0 3px #111820; }
 
-  /* ——— SÜPÜRÜCÜ KOL ———
-     Kol, bobin yolunun biraz DIŞINDAN dönüyor ve içe uzayıp diski kesiyor. */
-  .sweeper{
+  /* DÖNEN PARÇA — tek renk, diskin biraz üstünde */
+  .rotor-piece{
     position:absolute; left:50%; top:50%;
-    width:var(--sweeper-w); height:var(--sweeper-L);
-    border-radius:12px;
-    transform-origin:50% calc(var(--radius) + var(--sweeper-gap) + var(--sweeper-L)/2);
-    transform: translate(-50%,-50%) rotate(0deg) translateY(calc(-1 * (var(--radius) + var(--sweeper-gap))));
-    background: linear-gradient(180deg, #eef3fa, #d7dfea);
-    box-shadow: 0 6px 24px #0008, inset 0 0 0 1px #b7c1ce;
+    width:var(--pieceW); height:var(--pieceH);
+    transform-origin:50% calc(var(--pieceR) + var(--pieceH)/2);
+    transform: translate(-50%,-50%) rotate(0deg) translateY(calc(-1 * var(--pieceR)));
+    background: var(--pieceColor);
+    border-radius: 6px;
+    box-shadow: 0 4px 14px #0008, 0 0 0 1px #bfc8d4 inset;
   }
-  .sweeper::before, .sweeper::after{
-    content:""; position:absolute; left:0; width:100%; height:8px; background:#9aa7b6;
-    box-shadow: inset 0 0 0 1px #8b97a6;
-  }
-  .sweeper::before{ top:10px; border-radius:10px }
-  .sweeper::after { bottom:10px; border-radius:10px }
 
-  /* ——— BOBİNLER ——— (trig ile yerleşim) */
+  /* Bobinler (trig ile tam yol üzerinde) */
   .coil{
     position:absolute; left:0; top:0; width:var(--coil-w); height:var(--coil-h);
     border-radius:8px; overflow:hidden; transform: translate(-50%,-50%) rotate(var(--rot));
@@ -85,27 +73,24 @@
   .coil .capL, .coil .capR{ position:absolute; top:0; width:10px; height:100%; background:#5f6b77; filter:brightness(1.1); }
   .coil .capL{ left:0;  box-shadow: inset -2px 0 3px #0005 }
   .coil .capR{ right:0; box-shadow: inset  2px 0 3px #0005 }
-  .coil.active{ box-shadow: 0 3px 12px #0008, 0 0 32px var(--glow); filter:brightness(1) }
+  .coil.active{ box-shadow: 0 3px 12px #0008, 0 0 30px var(--glow); filter:brightness(1) }
   .coil.active::after{ content:""; position:absolute; right:-12px; top:50%; width:12px; height:12px; margin-top:-6px; border-radius:50%; background:var(--glow); box-shadow:0 0 16px var(--glow); }
 
-  /* ——— PANEL ——— */
-  .panel{ background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:14px; box-shadow:0 12px 36px #0007; backdrop-filter: blur(2px); }
-  .panel h3{margin:4px 0 8px; font-size:15px; opacity:.95}
+  /* Panel */
+  .panel{ background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:14px; box-shadow:0 12px 36px #0007; }
+  .panel h3{margin:4px 0 8px; font-size:15px}
   .row{display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin:8px 0}
-  button,select,input{ background:#0c1119; color:var(--text); border:1px solid var(--border); border-radius:10px; padding:8px 12px; font:600 13px/1 Inter,system-ui,Arial; }
+  button,select,input{ background:#0c1119; color:var(--text); border:1px solid var(--border);
+    border-radius:10px; padding:8px 12px; font:600 13px/1 Inter,system-ui,Arial; }
   button{background:linear-gradient(180deg,#2b72ff,#1f59d1); border-color:#2a65e0; cursor:pointer}
   button.secondary{background:#121722}
-  button:disabled{opacity:.6; cursor:not-allowed}
-  input[type="number"]{width:92px}
-  input[type="text"]{width:100%}
+  input[type="number"]{width:92px} input[type="text"]{width:100%}
   .stats{font:12px/1.6 ui-monospace,Menlo,Consolas; color:#cfe2ff; background:#09101a; border:1px solid #162033; border-radius:8px; padding:8px; margin-top:8px}
   .hint{font-size:12px;color:var(--muted);margin-top:6px}
 </style>
 </head>
 <body>
-
 <div class="stage">
-  <!-- Görsel alan -->
   <div class="arena" id="arena">
     <div class="ring-outer"></div>
     <div class="ring-track"></div>
@@ -115,11 +100,9 @@
     <div class="hub"></div>
     <div class="axle"></div>
 
-    <div class="sweeper" id="sweeper"></div>
-    <!-- Coils JS ile eklenecek -->
+    <div class="rotor-piece" id="piece"></div> <!-- dönen küçük parça -->
   </div>
 
-  <!-- Kontrol paneli -->
   <div class="panel">
     <h3>Çalıştır</h3>
     <div class="row">
@@ -160,41 +143,32 @@
     </div>
 
     <div class="stats" id="stats">t=0.000s • açı=0.0° • rpm=300 • aktif=[]</div>
-    <div class="hint">İpucu: Parametreleri değiştir → <b>Başlat</b>. Yeşil parlayan bobin(ler) aktiftir; gri blok rotor üstündeki süpürücü koldur.</div>
+    <div class="hint">Tek renkli küçük parça beyaz diskin biraz üstünde döner; bobin penceresine girdiğinde bobin yeşil parlar.</div>
   </div>
 </div>
 
 <script>
-/* ===== Helpers ===== */
 const $ = id => document.getElementById(id);
 const wrap360 = a => (a%360 + 360) % 360;
 const clamp = (x,a,b)=> Math.max(a, Math.min(b, x));
 const angDistCCW = (from,to)=> { let d = wrap360(to-from); if(d<0) d+=360; return d; };
 
-/* ===== DOM ===== */
-const arena = $("arena"), disc=$("disc"), sweeper=$("sweeper"), stats=$("stats");
+const arena = $("arena"), disc=$("disc"), piece=$("piece"), stats=$("stats");
 const inpN=$("inpN"), inpMode=$("inpMode"), inpDir=$("inpDir"),
       inpRPM=$("inpRPM"), inpStep=$("inpStep"), inpDwell=$("inpDwell"),
       inpAngles=$("inpAngles");
 const btnStart=$("btnStart"), btnStop=$("btnStop"), btnReset=$("btnReset");
 const btn4x90=$("btn4x90"), btn6x60=$("btn6x60"), btn8x45=$("btn8x45"), btn12x30=$("btn12x30");
 
-/* ===== State ===== */
 let N=4, mode=2, dir=1, rpm=300, stepMs=40, dwell=60;
 let angles=[0,90,180,270];
 let t=0, ang=0, raf=null, last=0;
 let coils=[];
 
-/* CSS var okuyucu */
 function cssNum(el, name){ return parseFloat(getComputedStyle(el).getPropertyValue(name)); }
-function trackRadius(){
-  const ring = cssNum(document.documentElement, '--ring');
-  const inset= cssNum(document.documentElement, '--trackInset');
-  return ring/2 - inset;
-}
+function trackRadius(){ const ring = cssNum(document.documentElement,'--ring'); const inset=cssNum(document.documentElement,'--trackInset'); return ring/2 - inset; }
 function ringCenter(){ return { cx: arena.clientWidth/2, cy: arena.clientHeight/2 }; }
 
-/* Coils build + place (trig) */
 function buildCoils(){
   coils.forEach(c=>c.el.remove()); coils=[];
   for(let i=0;i<N;i++){
@@ -207,32 +181,25 @@ function buildCoils(){
   placeCoils();
 }
 function placeCoils(){
-  const r = trackRadius(); const {cx,cy}=ringCenter();
+  const r=trackRadius(); const {cx,cy}=ringCenter();
   coils.forEach((c,i)=>{
     const deg=(360/N)*i, rad=(deg-90)*Math.PI/180;
-    c.el.style.left = (cx + r*Math.cos(rad))+"px";
-    c.el.style.top  = (cy + r*Math.sin(rad))+"px";
+    c.el.style.left=(cx + r*Math.cos(rad))+"px";
+    c.el.style.top =(cy + r*Math.sin(rad))+"px";
     c.el.style.setProperty('--rot', deg+'deg');
   });
 }
 
-/* Read UI */
 function readUI(){
-  N = clamp(parseInt(inpN.value||"4"),1,64);
-  mode = parseInt(inpMode.value||"2");
-  dir  = parseInt(inpDir.value||"1");
-  rpm  = parseFloat(inpRPM.value||"300");
-  stepMs = parseFloat(inpStep.value||"40");
-  dwell  = parseFloat(inpDwell.value||"60");
-
+  N=clamp(parseInt(inpN.value||"4"),1,64);
+  mode=parseInt(inpMode.value||"2"); dir=parseInt(inpDir.value||"1");
+  rpm=parseFloat(inpRPM.value||"300"); stepMs=parseFloat(inpStep.value||"40");
+  dwell=parseFloat(inpDwell.value||"60");
   const arr=(inpAngles.value||"").split(",").map(s=>parseFloat(s.trim())).filter(v=>!Number.isNaN(v)).map(wrap360);
   if(arr.length===N) angles=arr; else { angles=[...Array(N)].map((_,i)=>i*(360/N)); inpAngles.value=angles.join(","); }
-
-  if(coils.length!==N) buildCoils();
-  placeCoils();
+  if(coils.length!==N) buildCoils(); placeCoils();
 }
 
-/* Active coils (dwell + mod) */
 function activeForAngle(a){
   const on=new Set();
   for(let i=0;i<N;i++){
@@ -243,33 +210,25 @@ function activeForAngle(a){
   return [...on].sort((x,y)=>x-y);
 }
 
-/* Render */
 function render(){
   const act=activeForAngle(ang);
   coils.forEach((c,i)=> c.el.classList.toggle('active', act.includes(i)));
 
-  /* Süpürücü kolu döndür: yol merkezinden biraz DIŞTA dursun (sweeper-gap) */
-  const r = trackRadius() + cssNum(document.documentElement,'--sweeper-gap');
-  sweeper.style.transform =
-    `translate(-50%,-50%) rotate(${ang}deg) translateY(${-r}px)`;
+  /* küçük parçayı döndür: diskin biraz üstünde */
+  const rPiece = cssNum(document.documentElement,'--pieceR');
+  piece.style.transform = `translate(-50%,-50%) rotate(${ang}deg) translateY(${-rPiece}px)`;
 
-  /* Disk hafif ters yönde (parallax) */
-  disc.style.transform = `translate(-50%,-50%) rotate(${-(ang*0.4)}deg)`;
-
+  disc.style.transform = `translate(-50%,-50%) rotate(${-(ang*0.4)}deg)`; // parallax
   stats.textContent = `t=${t.toFixed(3)}s • açı=${wrap360(ang).toFixed(1)}° • rpm=${rpm.toFixed(1)} • aktif=[${act.join(",")}]`;
 }
 
-/* Loop */
 function loop(now){
   if(!last) last=now;
   let dt=(now-last)/1000, step=stepMs/1000;
   while(dt>=step){ t+=step; ang=wrap360(ang + 360*(rpm/60)*step*dir); dt-=step; }
-  last=now - dt*1000;
-  render();
-  raf=requestAnimationFrame(loop);
+  last=now - dt*1000; render(); raf=requestAnimationFrame(loop);
 }
 
-/* Buttons */
 btnStart.onclick=()=>{ readUI(); if(!raf){ last=0; raf=requestAnimationFrame(loop);} };
 btnStop.onclick =()=>{ if(raf){ cancelAnimationFrame(raf); raf=null; } };
 btnReset.onclick=()=>{ if(raf){ cancelAnimationFrame(raf); raf=null; } t=0; ang=0; render(); };
@@ -281,7 +240,7 @@ btn12x30.onclick= ()=>{ inpN.value=12; inpAngles.value=Array.from({length:12},(_
 
 window.addEventListener('resize', placeCoils);
 
-/* Init */
+/* init */
 buildCoils(); readUI(); render();
 </script>
 </body>
