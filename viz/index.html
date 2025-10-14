@@ -157,6 +157,10 @@
       <button class="secondary" id="btn8x45">8×45°</button>
       <button class="secondary" id="btn12x30">12×30°</button>
     </div>
+    <div class="row">
+  <input type="file" id="loadLog" accept=".jsonl,.txt">
+  <button id="btnPlayLog" class="secondary">Play Log</button>
+</div>
 
     <div class="stats" id="stats">• t=0.000s • piece_angle=0.0° • rpm=50</div>
     <div class="hint">The system energizes the electromagnet aligned with the rotor’s absolute angle. <em>Overlap</em> defines the dwell range (±overlap/2) around this position, while <em>phase offset</em> corrects timing errors between sensor and drive signals. In <em>Paired</em> mode, adjacent coils are co-energized to broaden the magnetic field and reduce torque ripple.
@@ -187,6 +191,40 @@ let t=0, ang=0, raf=null, last=0;
 function cssNum(el, name){ return parseFloat(getComputedStyle(el).getPropertyValue(name)); }
 function trackRadius(){ const ring = cssNum(document.documentElement,'--ring'); const inset=cssNum(document.documentElement,'--trackInset'); return ring/2 - inset; }
 function ringCenter(){ return { cx: arena.clientWidth/2, cy: arena.clientHeight/2 }; }
+
+// ---- JSONL playback ----
+let logFrames = [];   // {t, disk_angle, piece_angle, rpm, active}
+let playing = false;
+
+document.getElementById('loadLog').addEventListener('change', async (e)=>{
+  const file = e.target.files?.[0];
+  if(!file) return;
+  const text = await file.text();
+  logFrames = text.split(/\r?\n/).map(s=>s.trim()).filter(Boolean).map(JSON.parse);
+  console.log('[log] frames:', logFrames.length);
+});
+
+document.getElementById('btnPlayLog').addEventListener('click', ()=>{
+  if(!logFrames.length) { alert('Önce bir JSONL dosyası seç.'); return; }
+  if(raf){ cancelAnimationFrame(raf); raf=null; } // canlı döngüyü durdur
+  playing = true;
+  playLogFromFrames(logFrames);
+});
+
+async function playLogFromFrames(frames){
+  for (let i = 0; i < frames.length && playing; i++) {
+    const f = frames[i];
+    t   = Number(f.t) || 0;                 // <-- saniyeyi log’tan al
+    ang = wrap360(f.disk_angle);            // diski log’tan al
+    rpm = (f.rpm != null ? f.rpm : rpm);    // gösterge için (opsiyon)
+    render();
+    const dt = (i > 0) ? Math.max(0, (frames[i].t - frames[i-1].t) * 1000) : 16;
+    await new Promise(r => setTimeout(r, dt || 16));
+  }
+  playing = false;
+}
+
+
 
 
 let coils=[];
