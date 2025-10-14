@@ -1,7 +1,3 @@
-// Base Control Logic — CEM System Simulation (manual inputs, no sensors)
-// Portable C (Arduino/STM32 friendly). Serial I/O: stdin/stdout benzeri.
-// ÇIKTI: JSON satırları (JSONL), viz tarafıyla uyumlu.
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,22 +11,22 @@
 #define MAX_EM 64
 
 typedef struct {
-    int    num_EM;                     // EM count
-    float  rotor_angle_deg;            // start angle (deg)
-    float  rotor_speed_rpm;            // RPM
-    int    direction;                  // +1=CW, -1=CCW
-    int    mode;                       // 1=Single, 2=Paired
-    float  step_time_s;                // sim step (s)
-    float  overlap_deg;                // dwell window width (±overlap/2)
-    float  phase_offset_deg;           // phase offset
-    float  piece_angle_css_deg;        // CSS piece angle (0°=right), usually 90
-    float  *timing_table_deg;          // coil azimuths (deg, 0°=top)
+    int    num_EM;                     
+    float  rotor_angle_deg;            
+    float  rotor_speed_rpm;            
+    int    direction;                  
+    int    mode;                       
+    float  step_time_s;                
+    float  overlap_deg;                
+    float  phase_offset_deg;           
+    float  piece_angle_css_deg;        
+    float  *timing_table_deg;          
 } CemConfig;
 
 typedef struct {
     float t_s;
-    float rotor_deg;                   // 0..360
-    int   active_idx[MAX_EM];          // active EM indices; terminated with -1
+    float rotor_deg;                   
+    int   active_idx[MAX_EM];          
 } CemState;
 
 static float wrap360(float a){ float x=fmodf(a,360.0f); return x<0? x+360.0f : x; }
@@ -48,7 +44,7 @@ static int compute_active(const CemConfig* cfg, float piece_abs_deg, int* out_li
             if(cfg->mode==2) out_list[count++] = (i+1) % cfg->num_EM;
         }
     }
-    // dedupe (small N)
+    
     for(int i=0;i<count;i++){
         for(int j=i+1;j<count;j++){
             if(out_list[i]==out_list[j]){
@@ -62,13 +58,13 @@ static int compute_active(const CemConfig* cfg, float piece_abs_deg, int* out_li
 }
 
 static void update_EM_state(const CemConfig* cfg, CemState* st){
-    // piece_abs = rotor + (piece_css - 90) + phase
+    
     float piece_abs = wrap360(st->rotor_deg + (cfg->piece_angle_css_deg - 90.0f) + cfg->phase_offset_deg);
 
     int n = compute_active(cfg, piece_abs, st->active_idx);
-    (void)n; /* HW: use activate/deactivate */
+    (void)n; 
 
-    // JSONL out (viz ile uyumlu)
+    
     printf("{\"t\":%.3f,\"disk_angle\":%.1f,\"piece_angle\":%.1f,\"rpm\":%.1f,\"active\":[",
            st->t_s, st->rotor_deg, piece_abs, cfg->rotor_speed_rpm);
     for(int i=0;i<n;i++) printf("%s%d", (i?",":""), st->active_idx[i]);
@@ -126,7 +122,7 @@ int main(void){
             }
             fprintf(stderr, ">> done (ran %.2fs)\n", seconds);
         }else if(line[0]==0){
-            /* ignore */
+            
         }else{
             fprintf(stderr, ">> unknown cmd: %s\n", line);
         }
