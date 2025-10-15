@@ -28,13 +28,13 @@ It models the rotor–stator interaction logic and visualizes commutation timing
 
 
 Build:
-```bash
+
 From the firmware/ directory:
-```bash
-mkdir -p build
-cd build
-cmake ..
-make -j$(sysctl -n hw.ncpu)
+    ```bash
+    mkdir -p build
+    cd build
+    cmake ..
+    make -j$(sysctl -n hw.ncpu)
 
 Run:
 ./cem_sim
