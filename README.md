@@ -35,7 +35,7 @@ From the firmware/ directory
   cd build
   cmake ..
   make -j$(sysctl -n hw.ncpu)
-  ```bash
+
 
 
 
