@@ -13,4 +13,5 @@ add_executable(cem_sim
     src/cem.c
     src/hal_stub.c
     src/cli.c
+    src/cem_scheduler.c  
 )
