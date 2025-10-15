@@ -31,8 +31,11 @@ Build:
 From the firmware/ directory:
 
 mkdir -p build
+
 cd build
+
 cmake ..
+
 make -j$(sysctl -n hw.ncpu)
 
 Run:
