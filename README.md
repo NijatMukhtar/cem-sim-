@@ -53,16 +53,4 @@ Run:
 ./cem_sim
 
 
-| Command                     | Description                     |
-| --------------------------- | ------------------------------- |
-| `set rpm 120`               | Set rotor speed (RPM)           |
-| `set n 8`                   | Set number of electromagnets    |
-| `set overlap 25`            | Define overlap angle in degrees |
-| `set mode 1` / `set mode 2` | Toggle activation mode          |
-| `set angles 0,45,90,...`    | Manually set EM timing table    |
-| `run 2`                     | Run simulation for 2 seconds    |
-
-
-
-
 
